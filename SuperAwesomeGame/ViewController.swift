@@ -9,8 +9,18 @@
 import UIKit
 
 class Vector {
+    init(_ x : CGFloat, _ y : CGFloat) {
+        self.x = x
+        self.y = y
+    }
     var x : CGFloat = 0
     var y : CGFloat = 0
+    
+    static var zero = Vector(0, 0)
+    
+    static func +(left: Vector, right: Vector) -> Vector {
+        return Vector(left.x + right.x, left.y + right.y)
+    }
 }
 
 class ViewController: UIViewController, UIGestureRecognizerDelegate {
@@ -18,22 +28,17 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     @IBOutlet var character: UIImageView!
     @IBOutlet var characterBaseX: NSLayoutConstraint!
     @IBOutlet var characterBaseY: NSLayoutConstraint!
-    
-    
-    var velocityX: CGFloat = 10.0
-    var velocityY: CGFloat = 0.0
-    
-    var gravity: CGFloat = 1.5
-    var deceleration: CGFloat = 0.96
-    
-    var minY: CGFloat = 25.0
+
+    var position : Vector = Vector(0, 100)
+    var velocity : Vector = Vector(0, 0)
+    var acceleration : Vector = Vector(0, 0)
+    var gravity : Vector = Vector(0, -0.75)
+    var floorForce : Vector = Vector(0, 0)
     
     var dPadDeadZone: CGFloat = 20.0
-    
     @IBOutlet var aButton: UIImageView!
     @IBOutlet var bButton: UIImageView!
     @IBOutlet var dPad: UIImageView!
-    
     var dPadLocation: CGPoint?
     
     override func viewDidLoad() {
@@ -63,49 +68,44 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
         if let dPadLocation = dPadLocation {
             calcMove(dPadLocation)
         }
-        
-        //Y
-        var newY = characterBaseY.constant
-        velocityY = velocityY - gravity
-        newY = max(newY + velocityY, minY)
-        if (newY <= minY) {
-            velocityY = 0
+    
+        position = position + velocity
+        velocity = velocity + acceleration
+        acceleration = gravity + floorForce
+    
+        if (position.y <= 25){
+            floorForce = Vector(0, -gravity.y)
+            velocity.y = 0
+            position.y = 25
+            print("collided with floor ")
+        }else{
+            floorForce = Vector.zero
+            print("not collided")
         }
-        characterBaseY.constant = newY
-        
-        //X
-        var newX = characterBaseX.constant
-        
-        //
-        if newX > view.frame.size.width {
-            newX = -50
-        }else if newX < -50 {
-            newX = view.frame.size.width
+    
+        if (position.x > view.frame.width) {
+            position.x = -character.frame.width
+        }else if (position.x < -character.frame.width){
+            position.x = view.frame.width
         }
+        velocity.x = velocity.x * 0.97
         
-        //
-        newX = newX + velocityX
-        if (newY <= minY) {
-            if (abs(velocityX) > 0) {
-                velocityX = velocityX * deceleration
-            }
-        }
-        
-        characterBaseX.constant = newX
+        characterBaseY.constant = position.y
+        characterBaseX.constant = position.x
     }
     
     func jump(){
-        velocityY = 20
+        velocity.y = 10
     }
     
     func moveLeft(){
         print("moveLeft")
-        velocityX = max(velocityX - 1, -15)
+        velocity.x = max(velocity.x - 1, -15)
     }
     
     func moveRight(){
         print("moveRight")
-        velocityX = min(velocityX + 1, 15)
+        velocity.x = min(velocity.x + 1, 15)
     }
     
     func moveUp(){
@@ -114,6 +114,10 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     
     func moveDown(){
         print("moveDown")
+    }
+    
+    func collided(view1: UIView, view2: UIView) -> Bool{
+        return view1.frame.intersects(view2.frame)
     }
     
     func calcMove(_ location : CGPoint){
