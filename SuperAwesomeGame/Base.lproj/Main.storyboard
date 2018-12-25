@@ -28,7 +28,7 @@
                                     <constraint firstAttribute="height" constant="50" id="f2K-85-2yG"/>
                                 </constraints>
                             </imageView>
-                            <imageView userInteractionEnabled="NO" alpha="0.5" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="flatDark08" translatesAutoresizingMaskIntoConstraints="NO" id="F8E-jI-kub">
+                            <imageView userInteractionEnabled="NO" alpha="0.5" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="flatDark08" translatesAutoresizingMaskIntoConstraints="NO" id="F8E-jI-kub" customClass="JoyStick" customModule="SuperAwesomeGame" customModuleProvider="target">
                                 <rect key="frame" x="20" y="230" width="125" height="125"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="125" id="Azb-mF-9Mz"/>
