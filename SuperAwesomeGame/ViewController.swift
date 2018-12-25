@@ -148,10 +148,8 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate, JoyStickDel
             floorForce = Vector(0, -gravity.y)
             velocity.y = 0
             position.y = 25
-            print("collided with floor ")
         }else{
             floorForce = Vector.zero
-            print("not collided")
         }
     
         if (position.x > view.frame.width) {
@@ -170,21 +168,17 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate, JoyStickDel
     }
     
     func moveLeft(){
-        print("moveLeft")
         velocity.x = max(velocity.x - 1, -15)
     }
     
     func moveRight(){
-        print("moveRight")
         velocity.x = min(velocity.x + 1, 15)
     }
     
     func moveUp(){
-        print("moveUp")
     }
     
     func moveDown(){
-        print("moveDown")
     }
     
     func didGetEvent(_ direction: JoyStick.Direction) {
