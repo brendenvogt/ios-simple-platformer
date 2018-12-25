@@ -23,7 +23,92 @@ class Vector {
     }
 }
 
-class ViewController: UIViewController, UIGestureRecognizerDelegate {
+protocol JoyStickDelegate {
+    func didGetEvent(_ direction : JoyStick.Direction)
+}
+
+class JoyStick : UIImageView, UIGestureRecognizerDelegate{
+    var dPadDeadZone: CGFloat = 20.0
+
+    var delegate: JoyStickDelegate?
+    
+    public enum Direction {
+        case center
+        case up
+        case upRight
+        case right
+        case downRight
+        case down
+        case downLeft
+        case left
+        case upLeft
+    }
+    
+    var dPadLocation: CGPoint?
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        common()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+        common()
+    }
+    
+    func common(){
+        self.addGesture(action: #selector(JoyStick.dPadTouched(_:)), delegate: self)
+    }
+    
+    @objc func dPadTouched(_ rec:UITapGestureRecognizer) {
+        dPadLocation = rec.location(in: self)
+        if (rec.state == .ended) {
+            dPadLocation = nil
+        }
+        if let dPadLocation = self.dPadLocation {
+            calcMove(dPadLocation)
+        }
+    }
+    
+    func calcMove(_ location : CGPoint){
+        var direction: JoyStick.Direction = .center
+        if (location.y < self.frame.size.height/2 - dPadDeadZone){
+            direction = .up
+            if (location.x < self.frame.size.width/2 - dPadDeadZone){
+                direction = .upLeft
+            }else if (location.x > self.frame.size.width/2 + dPadDeadZone){
+                direction = .upRight
+            }
+        }else if (location.y > self.frame.size.height/2 + dPadDeadZone){
+            direction = .down
+            if (location.x < self.frame.size.width/2 - dPadDeadZone){
+                direction = .downLeft
+            }else if (location.x > self.frame.size.width/2 + dPadDeadZone){
+                direction = .downRight
+            }
+        }else{
+            if (location.x < self.frame.size.width/2 - dPadDeadZone){
+                direction = .left
+            }else if (location.x > self.frame.size.width/2 + dPadDeadZone){
+                direction = .right
+            }
+        }
+        delegate?.didGetEvent(direction)
+    }
+    
+}
+
+extension UIView {
+    func addGesture(action: Selector?, delegate: UIGestureRecognizerDelegate) {
+        let gest = UILongPressGestureRecognizer(target: delegate, action: action)
+        gest.delegate = delegate
+        gest.minimumPressDuration = 0
+        self.isUserInteractionEnabled = true
+        self.addGestureRecognizer(gest)
+    }
+}
+
+class ViewController: UIViewController, UIGestureRecognizerDelegate, JoyStickDelegate {
 
     @IBOutlet var character: UIImageView!
     @IBOutlet var characterBaseX: NSLayoutConstraint!
@@ -35,29 +120,19 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     var gravity : Vector = Vector(0, -0.75)
     var floorForce : Vector = Vector(0, 0)
     
-    var dPadDeadZone: CGFloat = 20.0
     @IBOutlet var aButton: UIImageView!
     @IBOutlet var bButton: UIImageView!
-    @IBOutlet var dPad: UIImageView!
-    var dPadLocation: CGPoint?
+    @IBOutlet var dPad: JoyStick!
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        dPad.delegate = self
         start()
     }
     
-    public func addGesture(view: UIView, action: Selector?, delegate: UIGestureRecognizerDelegate) {
-        let gest = UILongPressGestureRecognizer(target: self, action: action)
-        gest.delegate = delegate
-        gest.minimumPressDuration = 0
-        view.isUserInteractionEnabled = true
-        view.addGestureRecognizer(gest)
-    }
-    
     func start(){
-        addGesture(view: aButton, action: #selector(ViewController.aTapped(_:)), delegate: self)
-        addGesture(view: bButton, action: #selector(ViewController.bTapped(_:)), delegate: self)
-        addGesture(view: dPad, action: #selector(ViewController.dPadTouched(_:)), delegate: self)
+        aButton.addGesture(action: #selector(ViewController.aTapped(_:)), delegate: self)
+        bButton.addGesture(action: #selector(ViewController.bTapped(_:)), delegate: self)
         
         Timer.scheduledTimer(timeInterval: 0.0166666, target: self, selector: #selector(ViewController.update), userInfo: nil, repeats: true)
     }
@@ -65,10 +140,6 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     
     @objc func update() {
         
-        if let dPadLocation = dPadLocation {
-            calcMove(dPadLocation)
-        }
-    
         position = position + velocity
         velocity = velocity + acceleration
         acceleration = gravity + floorForce
@@ -116,21 +187,20 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
         print("moveDown")
     }
     
-    func collided(view1: UIView, view2: UIView) -> Bool{
-        return view1.frame.intersects(view2.frame)
+    func didGetEvent(_ direction: JoyStick.Direction) {
+        print(direction)
+        switch direction {
+        case .left, .downLeft, .upLeft:
+            moveLeft()
+        case .right, .downRight, .upRight:
+            moveRight()
+        default:
+            break
+        }
     }
     
-    func calcMove(_ location : CGPoint){
-        if (location.x < self.dPad.frame.size.width/2 - dPadDeadZone){
-            moveLeft()
-        }else if (location.x > self.dPad.frame.size.width/2 + dPadDeadZone){
-            moveRight()
-        }
-        if (location.y < self.dPad.frame.size.height/2 - dPadDeadZone){
-            moveUp()
-        }else if (location.y > self.dPad.frame.size.height/2 + dPadDeadZone){
-            moveDown()
-        }
+    func collided(view1: UIView, view2: UIView) -> Bool{
+        return view1.frame.intersects(view2.frame)
     }
     
     @objc func bTapped(_ rec:UITapGestureRecognizer) {
@@ -143,13 +213,6 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
         if (rec.state == .began){
             print("atapped")
             jump()
-        }
-    }
-    
-    @objc func dPadTouched(_ rec:UITapGestureRecognizer) {
-        dPadLocation = rec.location(in: dPad)
-        if (rec.state == .ended) {
-            dPadLocation = nil
         }
     }
 
