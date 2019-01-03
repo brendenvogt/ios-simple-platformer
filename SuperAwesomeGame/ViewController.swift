@@ -110,21 +110,72 @@ extension UIView {
 
 class ViewController: UIViewController, UIGestureRecognizerDelegate, JoyStickDelegate {
 
-    @IBOutlet var character: UIImageView!
-    @IBOutlet var characterBaseX: NSLayoutConstraint!
-    @IBOutlet var characterBaseY: NSLayoutConstraint!
-
-    var dinoCounter : Int = 0
+    var yPos : NSLayoutConstraint?
     
-    var position : Vector = Vector(0, 100)
-    var velocity : Vector = Vector(0, 0)
+    lazy var character: UIImageView = {
+        let size: CGFloat = 80.0
+        let offset: CGFloat = 25.0
+        var v = UIImageView(frame: CGRect(x: 200, y: view.frame.size.height-size-offset, width: size, height: size))
+        v.contentMode = .scaleAspectFit
+        v.image = UIImage(named: "dinoJump")
+        return v
+    }()
+
+    lazy var ground: UIImageView = {
+        let height : CGFloat = 50.0
+        let width : CGFloat = 3000.0
+        var v = UIImageView(frame: CGRect(x: 0, y: view.frame.size.height-height, width: width, height: height))
+        v.contentMode = .scaleAspectFit
+        v.image = UIImage(named: "dinoGround")
+        return v
+    }()
+
+    lazy var aButton: UIImageView = {
+        let size : CGFloat = 75.0
+        let offset : CGFloat = 25.0
+        let spacing : CGFloat = 10.0
+        var v = UIImageView(frame: CGRect(x: view.frame.size.width-offset-1*(spacing+size), y: self.view.frame.size.height-size-offset-0.5*size, width: 75, height: 75))
+        v.contentMode = .scaleAspectFit
+        v.image = UIImage(named: "flatDark35")
+        v.alpha = 0.75
+        v.addGesture(action: #selector(ViewController.aTapped(_:)), delegate: self)
+        return v
+    }()
+    
+    lazy var bButton: UIImageView = {
+        let size : CGFloat = 75.0
+        let offset : CGFloat = 25.0
+        let spacing : CGFloat = 10.0
+        var v = UIImageView(frame: CGRect(x: view.frame.size.width-offset-2*(spacing+size), y: self.view.frame.size.height-size-offset, width: size, height: size))
+        v.contentMode = .scaleAspectFit
+        v.image = UIImage(named: "flatDark36")
+        v.alpha = 0.75
+        v.addGesture(action: #selector(ViewController.bTapped(_:)), delegate: self)
+        return v
+    }()
+    
+    lazy var dPad: JoyStick = {
+        let size : CGFloat = 150.0
+        let offset : CGFloat = 25.0
+        var j = JoyStick(frame: CGRect(x: offset, y: self.view.frame.size.height-size-offset, width: size, height: size))
+        j.image = UIImage(named: "flatDark08")
+        j.alpha = 0.75
+        return j
+    }()
+    
+    var dinoCounter : CGFloat = 0.0
+    var isJumping : Bool = false
+    var isGoing : Bool = false
+    var isDead : Bool = false
+    var gameAcceleration : Vector = Vector(-0.003, 0)
+    
+    var position : Vector = Vector(0, 25)
+    var velocity : Vector = Vector(-8, 0)
     var acceleration : Vector = Vector(0, 0)
     var gravity : Vector = Vector(0, -0.75)
-    var floorForce : Vector = Vector(0, 0)
     
-    @IBOutlet var aButton: UIImageView!
-    @IBOutlet var bButton: UIImageView!
-    @IBOutlet var dPad: JoyStick!
+    var jumpForce : Vector = Vector(0, 14)
+    var floorForce : Vector = Vector(0, 0)
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -133,45 +184,64 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate, JoyStickDel
     }
     
     func start(){
-        aButton.addGesture(action: #selector(ViewController.aTapped(_:)), delegate: self)
-        bButton.addGesture(action: #selector(ViewController.bTapped(_:)), delegate: self)
+
+        view.addSubview(ground)
+        
+        view.addSubview(character)
+        
+        view.addSubview(aButton)
+        //view.addSubview(bButton)
+        //view.addSubview(dPad)
         
         Timer.scheduledTimer(timeInterval: 0.0166666, target: self, selector: #selector(ViewController.update), userInfo: nil, repeats: true)
     }
     
+    func convertPosition(_ vector: Vector, forCharacter character: UIView)-> Vector{
+        return Vector(vector.x, self.view.frame.size.height-vector.y-character.frame.size.height)
+    }
     
     @objc func update() {
+        
+        character.center.y = convertPosition(position, forCharacter: character).y + character.frame.size.height/2
+        ground.center.x = position.x + ground.frame.size.width/2
+        
+        if isGoing == false {
+            return
+        }
         
         updateDino()
         
         position = position + velocity
         velocity = velocity + acceleration
-        acceleration = gravity + floorForce
+        acceleration = gravity + floorForce + gameAcceleration
     
         if (position.y <= 25){
             floorForce = Vector(0, -gravity.y)
             velocity.y = 0
             position.y = 25
+            landed()
         }else{
             floorForce = Vector.zero
         }
     
-        if (position.x > view.frame.width) {
-            position.x = -character.frame.width
-        }else if (position.x < -character.frame.width){
-            position.x = view.frame.width
+        //ground movement
+        if (position.x < -ground.frame.width+view.frame.width){
+            position.x = 0
         }
-        velocity.x = velocity.x * 0.97
-        
-        characterBaseY.constant = position.y
-        characterBaseX.constant = position.x
-        
-        
+
     }
     
     func updateDino(){
-        let dinoLimit = 10
-        dinoCounter = dinoCounter + 1
+        let dinoLimit: CGFloat = 100.0
+        if isDead {
+            character.image = UIImage(named: "dinoDead")
+            return
+        }
+        if isGoing == false || isJumping {
+            character.image = UIImage(named: "dinoJump")
+            return
+        }
+        dinoCounter = dinoCounter + abs(velocity.x)
         if dinoCounter < dinoLimit {
             //dino1
             character.image = UIImage(named: "dino0")
@@ -183,8 +253,15 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate, JoyStickDel
         }
     }
     
+    func landed(){
+        isJumping = false
+    }
     func jump(){
-        velocity.y = 10
+        if (isJumping){
+            return
+        }
+        isJumping = true
+        velocity.y = jumpForce.y
     }
     
     func moveLeft(){
@@ -226,6 +303,10 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate, JoyStickDel
     @objc func aTapped(_ rec:UITapGestureRecognizer) {
         if (rec.state == .began){
             print("atapped")
+            if isGoing == false {
+                isGoing = true
+                return
+            }
             jump()
         }
     }
