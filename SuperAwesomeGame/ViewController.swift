@@ -163,11 +163,14 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate, JoyStickDel
         return j
     }()
     
+    var moveCounter : CGFloat = 0.0
     var dinoCounter : CGFloat = 0.0
     var isJumping : Bool = false
     var isGoing : Bool = false
     var isDead : Bool = false
     var gameAcceleration : Vector = Vector(-0.003, 0)
+    
+    var obstacles : [UIView] = []
     
     var position : Vector = Vector(0, 25)
     var velocity : Vector = Vector(-8, 0)
@@ -202,14 +205,11 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate, JoyStickDel
     
     @objc func update() {
         
-        character.center.y = convertPosition(position, forCharacter: character).y + character.frame.size.height/2
-        ground.center.x = position.x + ground.frame.size.width/2
-        
+        updateDino()
+
         if isGoing == false {
             return
         }
-        
-        updateDino()
         
         position = position + velocity
         velocity = velocity + acceleration
@@ -228,7 +228,45 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate, JoyStickDel
         if (position.x < -ground.frame.width+view.frame.width){
             position.x = 0
         }
-
+        
+        if (moveCounter <= 0){
+            moveCounter = CGFloat(Int(arc4random()) % 1000 + 2000)
+            spawnRandomObst()
+        }else{
+            moveCounter = moveCounter - abs(velocity.x)
+        }
+        
+        for obst in obstacles {
+            obst.center.x = obst.center.x + velocity.x
+            
+            if (collided(view1: obst, view2: character)){
+                isGoing = false
+                isDead = true
+            }
+            
+            if obst.center.x < -100 {
+                obst.removeFromSuperview()
+            }
+        }
+        
+        character.center.y = convertPosition(position, forCharacter: character).y + character.frame.size.height/2
+        ground.center.x = position.x + ground.frame.size.width/2
+        
+    }
+    
+    func spawnRandomObst(){
+        let obstNames : [String:CGSize] = [
+            "dinoCact1":CGSize(width: 46, height: 92),
+            "dinoCact2":CGSize(width: 30, height: 66),
+            "dinoCact3":CGSize(width: 96, height: 66),
+            "dinoCact4":CGSize(width: 146, height: 94)
+        ]
+        let item = obstNames.randomElement()!
+        let obst = UIImageView(frame: .init( x: -ground.frame.origin.x + view.frame.size.width, y: view.frame.size.height-item.value.height-25, width: item.value.width, height: item.value.height))
+        obst.contentMode = .scaleAspectFit
+        obst.image = UIImage(named: item.key)
+        view.addSubview(obst)
+        obstacles.append(obst)
     }
     
     func updateDino(){
@@ -303,6 +341,15 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate, JoyStickDel
     @objc func aTapped(_ rec:UITapGestureRecognizer) {
         if (rec.state == .began){
             print("atapped")
+            if isDead {
+                //restart
+                for obst in obstacles {
+                    obst.removeFromSuperview()
+                }
+                obstacles.removeAll()
+                velocity.x = -8
+                isDead = false
+            }
             if isGoing == false {
                 isGoing = true
                 return
