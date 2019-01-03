@@ -114,6 +114,8 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate, JoyStickDel
     @IBOutlet var characterBaseX: NSLayoutConstraint!
     @IBOutlet var characterBaseY: NSLayoutConstraint!
 
+    var dinoCounter : Int = 0
+    
     var position : Vector = Vector(0, 100)
     var velocity : Vector = Vector(0, 0)
     var acceleration : Vector = Vector(0, 0)
@@ -140,6 +142,8 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate, JoyStickDel
     
     @objc func update() {
         
+        updateDino()
+        
         position = position + velocity
         velocity = velocity + acceleration
         acceleration = gravity + floorForce
@@ -161,6 +165,22 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate, JoyStickDel
         
         characterBaseY.constant = position.y
         characterBaseX.constant = position.x
+        
+        
+    }
+    
+    func updateDino(){
+        let dinoLimit = 10
+        dinoCounter = dinoCounter + 1
+        if dinoCounter < dinoLimit {
+            //dino1
+            character.image = UIImage(named: "dino0")
+        }else if dinoCounter < dinoLimit * 2{
+            //dino2
+            character.image = UIImage(named: "dino1")
+        }else{
+            dinoCounter = 0
+        }
     }
     
     func jump(){

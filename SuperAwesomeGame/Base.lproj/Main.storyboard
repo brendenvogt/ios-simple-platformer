@@ -18,14 +18,22 @@
                         <rect key="frame" x="0.0" y="0.0" width="667" height="375"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="airadventurelevel4" translatesAutoresizingMaskIntoConstraints="NO" id="puz-oJ-xJu">
+                            <imageView hidden="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="puz-oJ-xJu">
                                 <rect key="frame" x="0.0" y="0.0" width="667" height="375"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </imageView>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="penguino" translatesAutoresizingMaskIntoConstraints="NO" id="gJQ-Mw-Aq5">
-                                <rect key="frame" x="260" y="295" width="50" height="50"/>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" image="dinoGround" translatesAutoresizingMaskIntoConstraints="NO" id="dsz-qU-Qpg">
+                                <rect key="frame" x="0.0" y="320" width="667" height="40"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="50" id="df1-cT-8QA"/>
-                                    <constraint firstAttribute="height" constant="50" id="f2K-85-2yG"/>
+                                    <constraint firstAttribute="height" constant="40" id="IYA-5n-2ff"/>
+                                </constraints>
+                            </imageView>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="dinoJump" translatesAutoresizingMaskIntoConstraints="NO" id="gJQ-Mw-Aq5">
+                                <rect key="frame" x="260" y="270" width="75" height="75"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="75" id="df1-cT-8QA"/>
+                                    <constraint firstAttribute="height" constant="75" id="f2K-85-2yG"/>
                                 </constraints>
                             </imageView>
                             <imageView userInteractionEnabled="NO" alpha="0.5" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="flatDark08" translatesAutoresizingMaskIntoConstraints="NO" id="F8E-jI-kub" customClass="JoyStick" customModule="SuperAwesomeGame" customModuleProvider="target">
@@ -59,6 +67,7 @@
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="puz-oJ-xJu" secondAttribute="bottom" id="QR4-io-8Jf"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="sID-fc-BPA" secondAttribute="trailing" constant="14" id="RE3-pF-EsF"/>
                             <constraint firstItem="puz-oJ-xJu" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="WWs-8T-0Iv"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="dsz-qU-Qpg" secondAttribute="bottom" constant="15" id="dTf-DI-755"/>
                             <constraint firstItem="puz-oJ-xJu" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="i7Q-d4-xbW"/>
                             <constraint firstItem="sID-fc-BPA" firstAttribute="leading" secondItem="ppW-bW-3kA" secondAttribute="trailing" constant="8" id="lde-7Q-y4T"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="gJQ-Mw-Aq5" secondAttribute="bottom" constant="30" id="pil-gm-cyI"/>
@@ -82,10 +91,10 @@
         </scene>
     </scenes>
     <resources>
-        <image name="airadventurelevel4" width="1920" height="1080"/>
+        <image name="dinoGround" width="1500" height="25"/>
+        <image name="dinoJump" width="40" height="43"/>
         <image name="flatDark08" width="160" height="160"/>
         <image name="flatDark35" width="80" height="80"/>
         <image name="flatDark36" width="80" height="80"/>
-        <image name="penguino" width="194" height="292"/>
     </resources>
 </document>
